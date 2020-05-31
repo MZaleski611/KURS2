@@ -1,0 +1,1023 @@
+#pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#include <iostream>
+#include <iomanip>
+#include <fstream>
+#include <string>
+#include <vector>
+#pragma warning(disable: 4996)
+
+using namespace std;
+
+string recv(SOCKET connection) {
+	int size;
+	string s_msg;
+	recv(connection, (char*)&size, sizeof(int), NULL);
+	char* msg = new char[size + 1];
+	recv(connection, msg, size, NULL);
+	msg[size] = '\0';
+	s_msg = msg;
+	delete[]msg;
+	return s_msg;
+}
+void send(SOCKET connection, string str) {
+	int size = str.size();
+	send(connection, (char*)&size, sizeof(int), NULL);
+	send(connection, str.c_str(), str.size(), NULL);
+}
+
+class excep : public exception {
+public:
+	string what() { return exception::what(); }
+};
+
+class Captain {
+	string name, surname;
+	int age, experience;
+public:
+	Captain() : name("ИВАН"), surname("ИВАНОВ"), age(40), experience(20) {}
+	void set_name(string name) { this->name = name; }
+	string get_name() { return name; }
+	void set_surname(string surname) { this->surname = surname; }
+	string get_surname() { return surname; }
+	void set_age(int age) { this->age = age; }
+	int get_age() { return age; }
+	void set_experience(int experience) { this->experience = experience; }
+	int get_experience() { return experience; }
+};
+
+class Person {
+	string login, password;
+public:
+	Person() : login("LOGIN"), password("PASSWORD") {}
+	void set_login(string login) { this->login = login; }
+	string get_login() { return login; }
+	void set_password(string password) { this->password = password; }
+	string get_password() { return password; }
+};
+
+class Admin : public Person {
+public:
+	Admin() {
+		set_login("A");
+		set_password("A");
+	}
+};
+
+class User : public Person {
+	Captain* captain;
+public:
+	User() : captain(new Captain) { 
+		set_login("U"); 
+		set_password("U");
+	}
+	void set_captain(Captain* captain) { this->captain = captain; }
+	Captain* get_captain() { return captain; }
+};
+
+vector<Captain> read_captains() {
+	vector<Captain> captains;
+	Captain captain;
+	string str;
+	ifstream ifs;
+	ifs.open("captains.txt");
+	if (ifs.is_open()) while (getline(ifs,str)) {
+		bool flag = true;
+		captain.set_name(str);
+		getline(ifs, str);
+		captain.set_surname(str);
+		getline(ifs, str);
+		captain.set_age(stoi(str));
+		getline(ifs, str);
+		captain.set_experience(stoi(str));
+		for (unsigned int x = 0; x < captains.size() && flag; x++) if (captain.get_age()==captains[x].get_age()&& captain.get_experience() == captains[x].get_experience()&& captain.get_name() == captains[x].get_name()&& captain.get_surname() == captains[x].get_surname())flag = false;
+		if(flag)captains.push_back(captain);
+	}
+	if (captains.empty()) captains.push_back(captain);
+	return captains;
+}
+bool write_captains(vector<Captain> captains) {
+	ofstream ofs;
+	ofs.open("captains.txt");
+	if (ofs.is_open()) {
+		for (vector<Captain>::iterator i = captains.begin(); i != captains.end(); i++)ofs << i->get_name() << endl << i->get_surname() << endl << i->get_age() << endl << i->get_experience() << endl;
+		return true;
+	}
+	else return false;
+}
+
+vector<Admin> read_admins() {
+	vector<Admin> admins;
+	Admin admin;
+	string str;
+	ifstream ifs;
+	ifs.open("admins.txt");
+	if (ifs.is_open()) while (getline(ifs, str)) {
+		admin.set_login(str);
+		getline(ifs, str);
+		admin.set_password(str);
+		admins.push_back(admin);
+	}
+	if (admins.empty()) admins.push_back(admin);
+	return admins;
+}
+bool write_admins(vector<Admin> admins) {
+	ofstream ofs;
+	ofs.open("admins.txt");
+	if (ofs.is_open()) {
+		for (vector<Admin>::iterator i = admins.begin(); i != admins.end(); i++) ofs << i->get_login() << endl << i->get_password() << endl;
+		return true;
+	}
+	else return false;
+}
+
+vector<User> read_users() {
+	vector<Captain> captains = read_captains();
+	vector<User> users;
+	User user;
+	string str;
+	ifstream ifs;
+	ifs.open("users.txt");
+	if (ifs.is_open()) while (getline(ifs, str)) {
+		bool flag = true;
+		user.set_login(str);
+		getline(ifs, str);
+		user.set_password(str);
+		getline(ifs, str);
+		user.get_captain()->set_name(str);
+		getline(ifs, str);
+		user.get_captain()->set_surname(str);
+		getline(ifs, str);
+		user.get_captain()->set_age(stoi(str));
+		getline(ifs, str);
+		user.get_captain()->set_experience(stoi(str));
+		users.push_back(user);
+	}
+	if (users.empty()) users.push_back(user);
+	return users;
+}
+bool write_users(vector<User> users) {
+	ofstream ofs;
+	ofs.open("users.txt");
+	if (ofs.is_open()) {
+		for (vector<User>::iterator i = users.begin(); i != users.end(); i++) ofs << i->get_login() << endl << i->get_password() << endl << i->get_captain()->get_name() << endl << i->get_captain()->get_surname() << endl << i->get_captain()->get_age() << endl << i->get_captain()->get_experience() << endl;
+		return true;
+	}
+	else return false;
+}
+
+bool captains_report(vector<Captain> captains) {
+	ofstream ofs;
+	ofs.open("captains_report.txt");
+	if (ofs.is_open() && captains.size()) {
+		ofs << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+		for (unsigned int x = 0; x < captains.size(); x++) ofs << "| " << setw(3) << x+1 << " | " << setw(10) << captains[x].get_name() << " | " << setw(10) << captains[x].get_surname() << " | " << setw(5) << captains[x].get_age() << " | " << setw(5) << captains[x].get_experience() << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+		return true;
+	}
+	else return false;
+}
+bool admins_report(vector<Admin> admins) {
+	ofstream ofs;
+	ofs.open("admins_report.txt");
+	if (ofs.is_open() && admins.size()) {
+		ofs << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+		for (unsigned int x = 0; x < admins.size(); x++) ofs << "| " << setw(3) << x+1 << " | " << setw(10) << admins[x].get_login() << " | " << setw(10) << admins[x].get_password() << " |" << endl << "|-----|------------|------------|" << endl;
+		return true;
+	}
+	else return false;
+}
+bool users_report(vector<User> users) {
+	ofstream ofs;
+	ofs.open("users_report.txt");
+	if (ofs.is_open() && users.size()) {
+		ofs << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+		for (unsigned int x = 0; x < users.size(); x++) ofs << "| " << setw(3) << x+1 << " | " << setw(10) << users[x].get_login() << " | " << setw(10) << users[x].get_password() << " |" << endl << "|-----|------------|------------|" << endl;		return true;
+	}
+	else return false;
+}
+
+void persons_menu(SOCKET connection,Admin* admin) {
+	int x = 1;
+	string login, password, type;
+	string str1,str2;
+	string str;
+	while (x) {	
+		vector<Admin> admins = read_admins();
+		vector<User> users = read_users();
+		bool flag = true;
+		x = stoi(recv(connection));
+		switch (x) {
+		case 1: {
+			login = recv(connection);
+			for (unsigned int x = 0; x < admins.size() && flag; x++)if (admins[x].get_login() == login && admins[x].get_password() == password) flag = false;
+			for (unsigned int x = 0; x < users.size() && flag; x++)if (users[x].get_login() == login && users[x].get_password() == password) flag = false;
+			if (flag) {
+				send(connection, "Y");
+				password = recv(connection);
+				string type = recv(connection);
+				if (type == "Admin") {
+					Admin admin;
+					admin.set_login(login);
+					admin.set_password(password);
+					admins.push_back(admin);
+					write_admins(admins);
+					send(connection, "A");
+				}
+				else if (type == "User") {
+					User user;
+					user.set_login(login);
+					user.set_password(password);
+					users.push_back(user);
+					write_users(users);
+					send(connection, "U");
+				}
+				else send(connection, "N");
+			}
+			else send(connection, "N");
+			break;
+		}
+		case 2: {
+			type = recv(connection);
+			if (type == "Admin") {
+				send(connection, to_string(admins.size()));
+				if (admins.size()) {
+					for (unsigned int x = 0; x < admins.size(); x++) {
+						send(connection, admins[x].get_password());
+						send(connection, admins[x].get_login());
+					}
+					str1 = str2 = recv(connection);
+					if (0 < stoi(str1) && stoi(str1) <= admins.size()) while (stoi(str2)) {
+						send(connection, admins[stoi(str1) - 1].get_password());
+						send(connection, admins[stoi(str1) - 1].get_login());
+						str2 = recv(connection);
+						switch (stoi(str2)) {
+						case 1: {
+							flag = true;
+							login = recv(connection);
+							for (unsigned int x = 0; x < admins.size() && flag; x++)if (admins[x].get_login() == login) flag = false;
+							for (unsigned int x = 0; x < users.size() && flag; x++)if (users[x].get_login() == login) flag = false;
+							if (flag) {
+								if (admins[stoi(str1) - 1].get_login() == admin->get_login() && admins[stoi(str1) - 1].get_password() == admin->get_password()) admin->set_login(login);
+								admins[stoi(str1) - 1].set_login(login);
+								send(connection, "Y");
+							}
+							else send(connection, "N");
+							break;
+						}
+						case 2: {
+							password = recv(connection);
+							if (admins[stoi(str1) - 1].get_login() == admin->get_login() && admins[stoi(str1) - 1].get_password() == admin->get_password()) admin->set_password(password);
+							admins[stoi(str1) - 1].set_password(password);
+							break;
+						}
+						}
+						write_admins(admins);
+					}
+				}
+			}
+			else if (type == "User") {
+				send(connection, to_string(users.size()));
+				for (unsigned int x = 0; x < users.size(); x++) {
+					send(connection, users[x].get_password());
+					send(connection, users[x].get_login());
+				}
+				if (users.size()) {
+					str1 = str2 = recv(connection);
+					if (0 < stoi(str1) && stoi(str1) <= users.size()) while (stoi(str2)) {
+						send(connection, users[stoi(str1) - 1].get_password());
+						send(connection, users[stoi(str1) - 1].get_login());
+						str2 = recv(connection);
+						switch (stoi(str2)) {
+						case 1: {
+							flag = true;
+							login = recv(connection);
+							for (unsigned int x = 0; x < admins.size() && flag; x++)if (admins[x].get_login() == login) {
+								flag = false;
+								send(connection, "N");
+							}
+							for (unsigned int x = 0; x < users.size() && flag; x++)if (users[x].get_login() == login) {
+								flag = false;
+								send(connection, "N");
+							}
+							if (flag) {
+								users[stoi(str1) - 1].set_login(login);
+								send(connection, "Y");
+							}
+							break;
+						}
+						case 2: {
+							users[stoi(str1) - 1].set_password(recv(connection));
+							break;
+						}
+						}
+						write_users(users);
+					}
+				}
+			}
+			else send(connection, to_string(0));
+			break;
+		}
+		case 3: {
+			type = recv(connection);
+			if (type == "Admin") {
+				if (admins.size()) {
+					send(connection, to_string(admins.size()));
+					for (unsigned int x = 0; x < admins.size(); x++) {
+						send(connection, admins[x].get_password());
+						send(connection, admins[x].get_login());
+					}
+					str1 = recv(connection);
+					if (0 < stoi(str1) && stoi(str1) <= admins.size()) {
+						if (admins[stoi(str1) - 1].get_login() == admin->get_login() && admins[stoi(str1) - 1].get_password() == admin->get_password()) send(connection, "N");
+						else {
+						send(connection, "Y");
+						admins.erase(admins.begin() + stoi(str1) - 1);
+						write_admins(admins);
+						}
+					}
+				}
+			}
+			else if (type == "User") {
+				send(connection, to_string(users.size()));
+				for (unsigned int x = 0; x < users.size(); x++) {
+					send(connection, users[x].get_password());
+					send(connection, users[x].get_login());
+				}
+				if (users.size()) {
+					str1 = recv(connection);
+					if (0 < stoi(str1) && stoi(str1) <= users.size()) {
+						send(connection, "Y");
+						users.erase(users.begin()+stoi(str1) - 1);
+						write_users(users);
+					}
+				}
+			}
+			else send(connection, to_string(0));
+			break;
+		}
+		case 4: {
+			int x = 1;
+			while (x) {
+				int size = 0;
+				x = stoi(recv(connection));
+				switch (x) {
+				case 1: {
+					str = recv(connection);
+					for (unsigned int x = 0; x < admins.size(); x++)if (admins[x].get_login() == str)size++;
+					for (unsigned int x = 0; x < users.size(); x++)if (users[x].get_login() == str)size++;
+					if (size) {
+						send(connection, "Y");
+						send(connection, to_string(size));
+						for (unsigned int x = 0; x < admins.size(); x++)if (admins[x].get_login() == str) {
+							send(connection, admins[x].get_password());
+							send(connection, admins[x].get_login());
+						}
+						for (unsigned int x = 0; x < users.size(); x++)if (users[x].get_login() == str) {
+							send(connection, users[x].get_password());
+							send(connection, users[x].get_login());
+						}
+					}
+					else send(connection, "N");
+					break;
+				}
+				case 2: {
+					str = recv(connection);
+					for (unsigned int x = 0; x < admins.size(); x++)if (admins[x].get_password() == str)size++;
+					for (unsigned int x = 0; x < users.size(); x++)if (users[x].get_password() == str)size++;
+					if (size) {
+						send(connection, "Y");
+						send(connection, to_string(size));
+						for (unsigned int x = 0; x < admins.size(); x++)if (admins[x].get_password() == str) {
+							send(connection, admins[x].get_password());
+							send(connection, admins[x].get_login());
+						}
+						for (unsigned int x = 0; x < users.size(); x++)if (users[x].get_password() == str) {
+							send(connection, users[x].get_password());
+							send(connection, users[x].get_login());
+						}
+					}
+					else send(connection, "N");
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 5: {
+			int x = 1;
+			while (x) {
+				int size = 0;
+				x = stoi(recv(connection));
+				switch (x) {
+				case 1: {
+					for (unsigned int x = 1; x < admins.size(); x++)if (admins[x].get_login() < admins[x - 1].get_login()) {
+						swap(admins[x], admins[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < admins.size(); x++)if (admins[x].get_login() < admins[x - 1].get_login()) {
+						swap(admins[x], admins[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < users.size(); x++)if (users[x].get_login() < users[x - 1].get_login()) {
+						swap(users[x], users[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < users.size(); x++)if (users[x].get_login() < users[x - 1].get_login()) {
+						swap(users[x], users[x - 1]);
+						x = 1;
+					}
+					break;
+				}
+				case 2: {
+					for (unsigned int x = 1; x < admins.size(); x++)if (admins[x].get_password() < admins[x - 1].get_password()) {
+						swap(admins[x], admins[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < admins.size(); x++)if (admins[x].get_password() < admins[x - 1].get_password()) {
+						swap(admins[x], admins[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < users.size(); x++)if (users[x].get_password() < users[x - 1].get_password()) {
+						swap(users[x], users[x - 1]);
+						x = 1;
+					}
+					for (unsigned int x = 1; x < users.size(); x++)if (users[x].get_password() < users[x - 1].get_password()) {
+						swap(users[x], users[x - 1]);
+						x = 1;
+					}
+					break;
+				}
+				}
+			}
+			write_admins(admins);
+			write_users(users);
+			break;
+		}
+		case 6: {
+			send(connection, to_string(admins.size() + users.size()));
+			for (unsigned int x = 0; x < admins.size(); x++) {
+					send(connection, admins[x].get_password());
+					send(connection, admins[x].get_login());
+			}
+			for (unsigned int x = 0; x < users.size(); x++) {
+				send(connection, users[x].get_password());
+				send(connection, users[x].get_login());
+			}
+			break;
+		}
+		case 7: {
+			if (admins_report(admins)) send(connection, "Y");
+			else send(connection, "N");
+			if (users_report(users)) send(connection, "Y");
+			else send(connection, "N");
+			break;
+		}
+		}
+	}
+}
+
+void captains_menu(SOCKET connection) {
+	int x = 1;
+	string str1,str2;
+	string str;
+	while (x) {
+		vector<Captain> captains = read_captains();
+		x = stoi(recv(connection));
+		switch (x) {
+		case 1: {
+			bool flag = true;
+			Captain captain;
+			captain.set_name(recv(connection));
+			captain.set_surname(recv(connection));
+			captain.set_age(stoi(recv(connection)));
+			if (captain.get_age() > 0) {
+				captain.set_experience(stoi(recv(connection)));
+				if (captain.get_experience() <= captain.get_age()) {
+					for (unsigned int x = 0; x < captains.size() && flag; x++) if (captain.get_age() == captains[x].get_age() && captain.get_experience() == captains[x].get_experience() && captain.get_name() == captains[x].get_name() && captain.get_surname() == captains[x].get_surname()) flag = false;
+					if (flag) {
+						captains.push_back(captain);
+						write_captains(captains);
+						send(connection, "Y");
+					}
+					else send(connection, "N");
+				}
+			}
+			break;
+		}
+		case 2: {
+			send(connection, to_string(captains.size()));
+			if (captains.size()) {
+				for (unsigned int x = 0; x < captains.size(); x++) {
+					send(connection, to_string(captains[x].get_experience()));
+					send(connection, to_string(captains[x].get_age()));
+					send(connection, captains[x].get_surname());
+					send(connection, captains[x].get_name());
+				}
+				str1 = str2 = recv(connection);
+				if (0 < stoi(str1) && stoi(str1) <= captains.size()) while(stoi(str2)) {
+					bool flag = true;
+					send(connection, captains[stoi(str1) - 1].get_name());
+					send(connection, captains[stoi(str1) - 1].get_surname());
+					send(connection, to_string(captains[stoi(str1) - 1].get_age()));
+					send(connection, to_string(captains[stoi(str1)-1].get_experience()));
+					str2 = recv(connection);
+					switch (stoi(str2)) {
+					case 1: {
+						str = recv(connection);
+						for (unsigned int x = 0; x < captains.size() && flag; x++) if (captains[stoi(str1) - 1].get_age() == captains[x].get_age() && captains[stoi(str1) - 1].get_experience() == captains[x].get_experience() && str == captains[x].get_name() && captains[stoi(str1) - 1].get_surname() == captains[x].get_surname()) flag = false;
+						if (flag) {
+							captains[stoi(str1) - 1].set_name(str);
+							write_captains(captains);
+							send(connection, "Y");
+						}
+						else send(connection, "N");
+						break;
+					}
+					case 2: {
+						str = recv(connection);
+						for (unsigned int x = 0; x < captains.size() && flag; x++) if (captains[stoi(str1) - 1].get_age() == captains[x].get_age() && captains[stoi(str1) - 1].get_experience() == captains[x].get_experience() && captains[stoi(str1) - 1].get_name() == captains[x].get_name() && str == captains[x].get_surname()) flag = false;
+						if (flag) {
+							captains[stoi(str1) - 1].set_surname(str);
+							write_captains(captains);
+							send(connection, "Y");
+						}
+						else send(connection, "N");
+						break;
+					}
+					case 3: {
+						str = recv(connection);
+						if (stoi(str) >= captains[stoi(str1) - 1].get_experience() && stoi(str) > 0) {
+							for (unsigned int x = 0; x < captains.size() && flag; x++) if (stoi(str) == captains[x].get_age() && captains[stoi(str1) - 1].get_experience() == captains[x].get_experience() && captains[stoi(str1) - 1].get_name() == captains[x].get_name() && captains[stoi(str1) - 1].get_surname() == captains[x].get_surname()) flag = false;
+							if (flag) {
+								captains[stoi(str1) - 1].set_age(stoi(str));
+								write_captains(captains);
+								send(connection, "Y");
+							}
+							else send(connection, "N");
+						}
+						break;
+					}
+					case 4: {
+						str = recv(connection);
+						if (captains[stoi(str1) - 1].get_age() >= stoi(str) && stoi(str) >= 0) {
+							for (unsigned int x = 0; x < captains.size() && flag; x++) if (captains[stoi(str1) - 1].get_age() == captains[x].get_age() && stoi(str) == captains[x].get_experience() && captains[stoi(str1) - 1].get_name() == captains[x].get_name() && captains[stoi(str1) - 1].get_surname() == captains[x].get_surname()) flag = false;
+							if (flag) {
+								captains[stoi(str1) - 1].set_experience(stoi(str));
+								write_captains(captains);
+								send(connection, "Y");
+							}
+							else send(connection, "N");
+						}
+						break;
+					}
+					}
+				}
+			}
+			break;
+		}
+		case 3: {
+			send(connection, to_string(captains.size()));
+			if (captains.size()) {
+				for (unsigned int x = 0; x < captains.size(); x++) {
+				send(connection, to_string(captains[x].get_experience()));
+				send(connection, to_string(captains[x].get_age()));
+				send(connection, captains[x].get_surname());
+				send(connection, captains[x].get_name());
+				}
+				str = recv(connection);
+				if (0 < stoi(str) && stoi(str) <= captains.size()) {	
+					captains.erase(captains.begin() + stoi(str) - 1);
+					write_captains(captains);
+				}
+			}
+			break;
+		}
+		case 4: {
+			int x = 1;
+			while (x) {
+				int size = 0;
+				x = stoi(recv(connection));
+				switch (x) {
+				case 1: {
+					str = recv(connection);
+					for (unsigned int x = 0; x < captains.size(); x++)if (captains[x].get_name() == str || captains[x].get_surname() == str)size++;
+					if (size) {
+						send(connection, "Y");
+						send(connection, to_string(size)); {
+							for (unsigned int x = 0; x < captains.size() && size; x++) if (captains[x].get_name() == str || captains[x].get_surname() == str) {
+								size--;
+								send(connection, to_string(captains[x].get_experience()));
+								send(connection, to_string(captains[x].get_age()));
+								send(connection, captains[x].get_surname());
+								send(connection, captains[x].get_name());
+							}
+						}
+					}
+					else send(connection, "N");
+					break;
+				}
+				case 2: {
+					str = recv(connection);
+					for (unsigned int x = 0; x < captains.size(); x++)if (captains[x].get_age() == stoi(str) || captains[x].get_experience() == stoi(str))size++;
+					if (size) {
+						send(connection, "Y");
+						send(connection, to_string(size)); {
+							for (unsigned int x = 0; x < captains.size() && size; x++)if (captains[x].get_age() == stoi(str) || captains[x].get_experience() == stoi(str)) {
+								size--;
+								send(connection, to_string(captains[x].get_experience()));
+								send(connection, to_string(captains[x].get_age()));
+								send(connection, captains[x].get_surname());
+								send(connection, captains[x].get_name());
+							}
+						}
+					}
+					else send(connection, "N");
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 5: {
+			int x = 1;
+			while (x) {
+				int size = 0;
+				x = stoi(recv(connection));
+				switch (x) {
+				case 1: {
+					for (unsigned int x = 1; x < captains.size(); x++) { 
+						if (captains[x].get_surname() < captains[x - 1].get_surname()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+						else if (captains[x].get_surname() == captains[x - 1].get_surname() && captains[x].get_name() < captains[x - 1].get_name()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+					}
+					for (unsigned int x = 1; x < captains.size(); x++) {
+						if (captains[x].get_surname() < captains[x - 1].get_surname()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+						else if (captains[x].get_surname() == captains[x - 1].get_surname() && captains[x].get_name() < captains[x - 1].get_name()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+					}
+					write_captains(captains);
+					break;
+				}
+				case 2: {
+					for (unsigned int x = 1; x < captains.size(); x++) {
+						if (captains[x].get_experience() < captains[x - 1].get_experience()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+						if (captains[x].get_experience() == captains[x - 1].get_experience() && captains[x].get_age() < captains[x - 1].get_age()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+					}
+					for (unsigned int x = 1; x < captains.size(); x++) {
+						if (captains[x].get_experience() < captains[x - 1].get_experience()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+						if (captains[x].get_experience() == captains[x - 1].get_experience() && captains[x].get_age() < captains[x - 1].get_age()) {
+							swap(captains[x], captains[x - 1]);
+							x = 1;
+						}
+					}
+					write_captains(captains);
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 6: {
+			send(connection,to_string(captains.size()));
+			if (captains.size()) for (unsigned int x = 0; x < captains.size(); x++) {
+				send(connection, to_string(captains[x].get_experience()));
+				send(connection, to_string(captains[x].get_age()));
+				send(connection, captains[x].get_surname());
+				send(connection, captains[x].get_name());
+			}
+			break;
+		}
+		case 7: {
+			if (captains_report(captains)) send(connection, "Y");
+			else send(connection, "N");
+			break;
+		}
+		}
+	}
+}
+
+void main_menu_A(SOCKET connection,Admin* admin) {
+	int x = 1;
+	string str;
+	while (x) {
+		vector<Admin> admins = read_admins();
+		vector<User> users = read_users();
+		bool flag = true;
+		send(connection, admin->get_password());
+		send(connection, admin->get_login());
+		x = stoi(recv(connection));
+		switch (x) {
+		case 1: {
+			str = recv(connection);
+			for (unsigned int x = 0; x < admins.size() && flag; x++) if(admins[x].get_login() == str) {
+				flag = false;
+				send(connection, "N");
+			}
+			for (unsigned int x = 0; x < users.size() && flag; x++) if (users[x].get_login() == str) {
+				flag = false;
+				send(connection, "N");
+			}
+			if (flag) for (unsigned int x = 0; x < admins.size() && flag; x++) if(admins[x].get_login() == admin->get_login() && admins[x].get_password() == admin->get_password()) {
+				flag = false;
+				admin->set_login(str);
+				admins[x].set_login(admin->get_login());
+				admins[x].set_password(admin->get_password());
+				write_admins(admins);
+				send(connection, "Y");
+			}
+			break;
+		}
+		case 2: {
+			for (unsigned int x = 0; x < admins.size() && flag; x++) if (admins[x].get_login() == admin->get_login() && admins[x].get_password() == admin->get_password()) {
+				flag = false;
+				admin->set_password(recv(connection));
+				admins[x].set_login(admin->get_login());
+				admins[x].set_password(admin->get_password());
+				write_admins(admins);
+			}
+			break;
+		}
+		case 3: {
+			for (unsigned int x = 0; x < admins.size() && flag; x++) if (admins[x].get_login() == admin->get_login() && admins[x].get_password() == admin->get_password()) {
+				flag = false;
+				admins.erase(admins.begin() + x);
+				write_admins(admins);
+			}
+			x = 0;
+			break;
+		}
+		case 4: {
+			persons_menu(connection, admin);
+			break;
+		}
+		case 5: {
+			captains_menu(connection);
+			break;
+		}
+		case 6: {
+			vector<Captain> captains = read_captains();
+			send(connection, to_string(captains.size()));
+			if (captains.size()) {
+				int size = stoi(recv(connection));
+				int sum1 = 0;
+				int sum2 = 0;
+				vector<float> result;
+				if (size) {
+					for (unsigned int x = 0; x < captains.size(); x++) {
+						sum1 = 0;
+						for (unsigned int y = 0; y < size; y++) {
+							send(connection, to_string(captains[x].get_experience()));
+							send(connection, to_string(captains[x].get_age()));
+							send(connection, captains[x].get_surname());
+							send(connection, captains[x].get_name());
+							sum1 += (captains.size() - stoi(recv(connection)));
+						}
+						sum2 += sum1;
+						result.push_back(sum1);
+					}
+					for (unsigned int x = 0; x < result.size(); x++) result[x] = (result[x] / sum2) * 100;
+					for (unsigned int x = 0; x < captains.size(); x++) {
+						send(connection, to_string((result[x] - 0.000002)));
+						send(connection, to_string(captains[x].get_experience()));
+						send(connection, to_string(captains[x].get_age()));
+						send(connection, captains[x].get_surname());
+						send(connection, captains[x].get_name());
+					}
+				}
+			}
+			break;
+		}
+		}
+	}
+}
+
+void main_menu_U(SOCKET connection,User* user) {
+	int x = 1;
+	string str;
+	while (x) {
+		vector<Admin> admins = read_admins();
+		vector<User> users = read_users();
+		vector<Captain> captains = read_captains();
+		bool flag = true;
+		send(connection, to_string(user->get_captain()->get_experience()));
+		send(connection, to_string(user->get_captain()->get_age()));
+		send(connection, user->get_captain()->get_surname());
+		send(connection, user->get_captain()->get_name());
+		send(connection, user->get_password());
+		send(connection, user->get_login());
+		x = stoi(recv(connection));
+		switch (x) {
+		case 1: {
+			str = recv(connection);
+			for (unsigned int x = 0; x < admins.size() && flag; x++) if (admins[x].get_login() == str) {
+				flag = false;
+				send(connection, "N");
+			}
+			for (unsigned int x = 0; x < users.size() && flag; x++) if (users[x].get_login() == str) {
+				flag = false;
+				send(connection, "N");
+			}
+			if (flag) for (unsigned int x = 0; x < users.size() && flag; x++) if (users[x].get_login() == user->get_login() && users[x].get_password() == user->get_password()) {
+				flag = false;
+				user->set_login(str);
+				users[x].set_login(user->get_login());
+				users[x].set_password(user->get_password());
+				write_users(users);
+				send(connection, "Y");
+			}
+			break;
+		}
+		case 2: {
+			for (unsigned int x = 0; x < users.size() && flag; x++) if (users[x].get_login() == user->get_login() && users[x].get_password() == user->get_password()) {
+				flag = false;
+				user->set_password(recv(connection));
+				users[x].set_login(user->get_login());
+				users[x].set_password(user->get_password());
+				write_users(users);
+			}
+			break;
+		}
+		case 3: {
+			for (unsigned int x = 0; x < users.size() && flag; x++) if (users[x].get_login() == user->get_login() && users[x].get_password() == user->get_password()) {
+				flag = false;
+				users.erase(users.begin() + x);
+				write_users(users);
+			}
+			x = 0;
+			break;
+		}
+		case 4: {
+			send(connection, to_string(captains.size()));
+			if (captains.size()) {
+				for (unsigned int x = 0; x < captains.size(); x++) {
+					send(connection, to_string(captains[x].get_experience()));
+					send(connection, to_string(captains[x].get_age()));
+					send(connection, captains[x].get_surname());
+					send(connection, captains[x].get_name());
+				}
+				str = recv(connection);
+				if (0 < stoi(str) && stoi(str) <= captains.size()) {
+					user->get_captain()->set_name(captains[stoi(str) - 1].get_name());
+					user->get_captain()->set_surname(captains[stoi(str) - 1].get_surname());
+					user->get_captain()->set_age(captains[stoi(str) - 1].get_age());
+					user->get_captain()->set_experience(captains[stoi(str) - 1].get_experience());
+					for (unsigned int x = 0; x < users.size() && flag; x++) if (user->get_login() == users[x].get_login() && user->get_password() == users[x].get_password()) {
+						flag = false;
+						users[x].set_captain(user->get_captain());
+					}
+					write_users(users);
+				}
+			}
+			break;
+		}
+		case 5: {
+			send(connection, to_string(captains.size()));
+			if (captains.size()) {
+				int size = stoi(recv(connection));
+				int sum1 = 0;
+				int sum2 = 0;
+				vector<float> result;
+				if (size) {
+					for (unsigned int x = 0; x < captains.size(); x++) {
+						sum1 = 0;
+						for (unsigned int y = 0; y < size; y++) {
+							send(connection, to_string(captains[x].get_experience()));
+							send(connection, to_string(captains[x].get_age()));
+							send(connection, captains[x].get_surname());
+							send(connection, captains[x].get_name());
+							sum1 += (captains.size() - stoi(recv(connection)));
+						}
+						sum2 += sum1;
+						result.push_back(sum1);
+					}
+					for (unsigned int x = 0; x < result.size(); x++) result[x] = (result[x] / sum2) * 100;
+					for (unsigned int x = 0; x < captains.size(); x++) {
+						send(connection, to_string((result[x] - 0.000002)));
+						send(connection, to_string(captains[x].get_experience()));
+						send(connection, to_string(captains[x].get_age()));
+						send(connection, captains[x].get_surname());
+						send(connection, captains[x].get_name());
+					}
+				}
+			}
+			break;
+		}
+		}
+	}
+}
+
+void enter_menu(SOCKET connection) {
+	cout << "КЛИЕНТ ПОДКЛЮЧИЛСЯ" << endl;
+	int x = 1;
+	string login, password;
+	while (x) {
+		vector<Admin> admins = read_admins();
+		vector<User> users = read_users();
+		bool flag = true;
+		x = stoi(recv(connection));
+		switch (x) {
+		case 1: {
+			login = recv(connection);
+			password = recv(connection);
+			for (unsigned int x = 0; x < admins.size() && flag; x++)if (admins[x].get_login() == login && admins[x].get_password() == password) {
+				flag = false;
+				send(connection, "A");
+				main_menu_A(connection, &admins[x]);
+			}
+			for (unsigned int x = 0; x < users.size() && flag; x++)if (users[x].get_login() == login && users[x].get_password() == password) {
+				flag = false;
+				send(connection, "U");
+				main_menu_U(connection, &users[x]);
+			}
+			if (flag) send(connection, "N");
+			break;
+		}
+		case 2: {
+			login = recv(connection);
+			for (unsigned int x = 0; x < admins.size() && flag; x++)if (admins[x].get_login() == login && admins[x].get_password() == password) {
+				flag = false;
+				send(connection, "N");
+			}
+			for (unsigned int x = 0; x < users.size() && flag; x++)if (users[x].get_login() == login && users[x].get_password() == password) {
+				flag = false;
+				send(connection, "N");
+			}
+			if (flag) {
+				send(connection, "Y");
+				password = recv(connection);
+				string type = recv(connection);
+				if (type == "Admin") {
+					Admin admin;
+					admin.set_login(login);
+					admin.set_password(password);
+					admins.push_back(admin);
+					write_admins(admins);
+					send(connection, "A");
+					main_menu_A(connection, &admin);
+				}
+				else if (type == "User") {
+					User user;
+					user.set_login(login);
+					user.set_password(password);
+					users.push_back(user);
+					write_users(users);
+					send(connection, "U");
+					main_menu_U(connection, &user);
+				}
+				else send(connection, "N");
+			}
+			break;
+		}
+		}
+	}
+	cout << "КЛИЕНТ  ОТКЛЮЧИЛСЯ" << endl;
+	closesocket(connection);
+}
+
+int main()	 {
+	system("COLOR B");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	WSAData wsaData;
+	WORD DLLVersion = MAKEWORD(2, 1);
+	excep my_excep;
+	try { if (WSAStartup(DLLVersion, &wsaData)) throw my_excep; }
+	catch (excep) { cout << my_excep.what(); }
+	SOCKADDR_IN addr;
+	int sizeofaddr = sizeof(addr);
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_port = htons(1111);
+	addr.sin_family = AF_INET;
+	SOCKET sListen = socket(AF_INET, SOCK_STREAM, NULL);
+	bind(sListen, (SOCKADDR*)&addr, sizeof(addr));
+	listen(sListen, SOMAXCONN);
+	vector<SOCKET> connections;
+	while (1) {
+		SOCKET newConnection = accept(sListen, (SOCKADDR*)&addr, &sizeofaddr);
+		if (newConnection) {
+			connections.push_back(newConnection);
+			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)enter_menu, (LPVOID)(newConnection), NULL, NULL);
+		}
+	}
+	system("pause");
+	return 0;
+}
