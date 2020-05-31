@@ -1,0 +1,897 @@
+#pragma comment(lib, "ws2_32.lib")
+#include <winsock2.h>
+#include <iostream>
+#include <iomanip>
+#include <string>
+#pragma warning(disable: 4996)
+
+using namespace std;
+
+string recv(SOCKET connection) {
+	int size;
+	string s_msg;
+	recv(connection, (char*)&size, sizeof(int), NULL);
+	char* msg = new char[size + 1];
+	recv(connection, msg, size, NULL);
+	msg[size] = '\0';
+	s_msg = msg;
+	delete[]msg;
+	return s_msg;
+}
+void send(SOCKET connection, string str) {
+	int size = str.size();
+	send(connection, (char*)&size, sizeof(int), NULL);
+	send(connection, str.c_str(), str.size(), NULL);
+}
+
+void persons_menu(SOCKET connection) {
+	int x = 1;
+	string str;
+	while (x) {
+		system("cls");
+		cout << "\tМЕНЮ ПЕРСОН" << endl << "1.ДОБАВИТЬ ПЕРСОНУ" << endl << "2.ИЗМЕНИТЬ ПЕРСОНУ" << endl << "3.УДАЛИТЬ  ПЕРСОНУ" << endl << "4.ПОИСК" << endl << "5.СОРТИРОВКА" << endl << "6.ВЫВОД НА ЭКРАН" << endl << "7.ВЫВОД В   ФАЙЛ" << endl << "0.ВЫХОД" << endl;
+		cin >> x;
+		cin.get();
+		send(connection, to_string(x));
+		switch (x) {
+		case 1: {
+			system("cls");
+			cout << "ВВЕДИТЕ ЛОГИН" << endl;
+			getline(cin, str);
+			send(connection, str);
+			str = recv(connection);
+			if (str == "Y") {
+				system("cls");
+				cout << "ВВЕДИТЕ ПАРОЛЬ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				system("cls");
+				cout << "ВВЕДИТЕ ТИП" << endl;
+				getline(cin, str);
+				send(connection, str);
+				str = recv(connection);
+				if (str == "A") {
+					system("cls");
+					cout << "РЕГИСТРАЦИЯ АДМИНИСТРАТОРА ПРОШАЛА УСПЕШНО" << endl;
+					Sleep(1000);
+				}
+				else if (str == "U") {
+					system("cls");
+					cout << "РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ ПРОШАЛА УСПЕШНО" << endl;
+					Sleep(1000);
+				}
+				else if (str == "N") {
+					system("cls");
+					cout << "ВЫБРАННЫЙ ТИП НЕ РАСПОЗНАН" << endl;
+					Sleep(1000);
+				}
+			}
+			else if (str == "N") {
+				system("cls");
+				cout << "ДАННЫЙ ЛОГИН УЖЕ ЗАНЯТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 2: {
+			system("cls");
+			cout << "ВВЕДИТЕ ТИП ПЕРСОНЫ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " |" << endl << "|-----|------------|------------|" << endl;
+				cout << "0.ВЫХОД" << endl << "ВВЕДИТЕ НОМЕР ПЕРСОНЫ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (0 > stoi(str) || stoi(str) > size) {
+					system("cls");
+					cout << "ДАННОЙ ПЕРСОНЫ НЕТ" << endl;
+					Sleep(1000);
+				}
+				else if (stoi(str)) {
+					int x = 1;
+					while (x) {
+						system("cls");
+						cout << "1.ИЗМЕНИТЬ  ЛОГИН : " << recv(connection) << endl << "2.ИЗМЕНИТЬ ПАРОЛЬ : " << recv(connection) << endl << "0.ВЫХОД" << endl;
+						cin >> x;
+						cin.get();
+						send(connection, to_string(x));
+						switch (x) {
+						case 1: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВЫЙ ЛОГИН" << endl;
+							getline(cin, str);
+							send(connection, str);
+							str = recv(connection);
+							system("cls");
+							if (str == "Y") cout << "ЛОГИН УСПЕШНО ИЗМЕНЁН" << endl;
+							else if (str == "N") cout << "ДАННЫЙ ЛОГИН УЖЕ ЗАНЯТ" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 2: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВЫЙ ПАРОЛЬ" << endl;
+							getline(cin, str);
+							send(connection, str);
+							system("cls");
+							cout << "ПАРОЛЬ УСПЕШНО ИЗМЕНЁН" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 0: break;
+						default: {
+							cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+							Sleep(1000);
+							break;
+						}
+						}
+					}
+				}
+			}
+			else {
+				system("cls");
+				cout << "ПЕРСОН ДАННОГО ТИПА НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 3: {
+			system("cls");
+			cout << "ВВЕДИТЕ ТИП ПЕРСОНЫ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " |" << endl << "|-----|------------|------------|" << endl;
+				cout << "0.ВЫХОД" << endl << "ВВЕДИТЕ НОМЕР ПЕРСОНЫ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (0 > stoi(str) || stoi(str) > size) {
+					system("cls");
+					cout << "ДАННОЙ ПЕРСОНЫ НЕТ" << endl;
+					Sleep(1000);
+				}
+				else if (stoi(str)) {
+					str = recv(connection);
+					system("cls");
+					if (str == "Y") cout << "ПЕРСОНА УСПЕШНО УДАЛЕНА" << endl;
+					else if (str == "N")cout << "УДАЛЕНИЕ НЕВОЗМОЖНО" << endl;
+					Sleep(1000);
+				}
+			}
+			else {
+				system("cls");
+				cout << "ПЕРСОН ДАННОГО ТИПА НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 4: {
+			int x = 1;
+			while (x) {
+				system("cls");
+				cout << "1.ПО ЛОГИНУ" << endl << "2.ПО ПАРОЛЮ" << endl << "0.ВЫХОД" << endl;
+				cin >> x;
+				cin.get();
+				send(connection, to_string(x));
+				switch (x) {
+				case 1: {
+					system("cls");
+					cout << "ВВЕДИТЕ ЛОГИН" << endl;
+					getline(cin, str);
+					send(connection, str);
+					str = recv(connection);
+					if (str == "Y") {
+						str = recv(connection);
+						system("cls");
+						cout << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+						for (unsigned int x = 1; x <= stoi(str); x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " |" << endl << "|-----|------------|------------|" << endl;
+						system("pause");
+					}
+					else if (str == "N") {
+						system("cls");
+						cout << "ПЕРСОН НЕ НАЙДЕНО" << endl;
+						Sleep(1000);
+					}
+					break;
+				}
+				case 2: {
+					system("cls");
+					cout << "ВВЕДИТЕ ПАРОЛЬ" << endl;
+					getline(cin, str);
+					send(connection, str);
+					str = recv(connection);
+					if (str == "Y") {
+						str = recv(connection);
+						system("cls");
+						cout << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+						for (unsigned int x = 1; x <= stoi(str); x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " |" << endl << "|-----|------------|------------|" << endl;
+						system("pause");
+					}
+					else if (str == "N") {
+						system("cls");
+						cout << "ПЕРСОН НЕ НАЙДЕНО" << endl;
+						Sleep(1000);
+					}
+					break;
+				}
+				case 0: break;
+				default: {
+					cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+					Sleep(1000);
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 5: {
+			int x = 1;
+			while (x) {
+				system("cls");
+				cout << "1.ПО ЛОГИНУ" << endl << "2.ПО ПАРОЛЮ" << endl << "0.ВЫХОД" << endl;
+				cin >> x;
+				cin.get();
+				send(connection, to_string(x));
+				switch (x) {
+				case 1: {
+					system("cls");
+					cout << "ПЕРСОНЫ ОТСОРТИРОВАНЫ ПО ЛОГИНУ" << endl;
+					Sleep(1000);
+					break;
+				}
+				case 2: {
+					system("cls");
+					cout << "ПЕРСОНЫ ОТСОРТИРОВАНЫ ПО ПАРОЛЮ" << endl;
+					Sleep(1000);
+					break;
+				}
+				case 0: break;
+				default: {
+					cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+					Sleep(1000);
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 6: {
+			system("cls");
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|" << endl << "|  №  |    ЛОГИН   |   ПАРОЛЬ   |" << endl << "|-----|------------|------------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " |" << endl << "|-----|------------|------------|" << endl;
+				system("pause");
+			}
+			else {
+				system("cls");
+				cout << "ПЕРСОН НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 7: {
+			system("cls");
+			str = recv(connection);
+			if (str == "Y")cout << "ОТЧЁТ ПО АДМИНИСТРАТОРАМ УСПЕШНО СФОРМИРОВАН" << endl;
+			else if (str == "N")cout << "ОТЧЁТ ПО АДМИНИСТРАТОРАМ НЕ СФОРМИРОВАН" << endl;
+			str = recv(connection);
+			if (str == "Y")cout << "ОТЧЁТ ПО ПОЛЬЗОВАТЕЛЯМ УСПЕШНО СФОРМИРОВАН" << endl;
+			else if (str == "N")cout << "ОТЧЁТ ПО ПОЛЬЗОВАТЕЛЯМ НЕ СФОРМИРОВАН" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 0: break;
+		default: {
+			cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+			Sleep(1000);
+			break;
+		}
+		}	
+	}
+}
+
+void captains_menu(SOCKET connection) {
+	int x = 1;
+	string str;
+	string age, experience;
+	while (x) {
+		system("cls");
+		cout << "\tМЕНЮ КАПИТАНОВ" << endl << "1.ДОБАВИТЬ КАПИТАНА" << endl << "2.ИЗМЕНИТЬ КАПИТАНА" << endl << "3.УДАЛИТЬ  КАПИТАНА" << endl << "4.ПОИСК" << endl << "5.СОРТИРОВКА" << endl << "6.ВЫВОД НА ЭКРАН" << endl << "7.ВЫВОД В   ФАЙЛ" << endl << "0.ВЫХОД" << endl;
+		cin >> x;
+		cin.get();
+		send(connection, to_string(x));
+		switch (x) {
+		case 1: {
+			system("cls");
+			cout << "ВВЕДИТЕ ИМЯ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			system("cls");
+			cout << "ВВЕДИТЕ ФАМИЛИЮ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			system("cls");
+			cout << "ВВЕДИТЕ ВОЗРАСТ" << endl;
+			getline(cin, age);
+			send(connection, age);
+			system("cls");
+			if (stoi(age) > 0) {
+				system("cls");
+				cout << "ВВЕДИТЕ СТАЖ" << endl;
+				getline(cin, experience);
+				send(connection, experience);
+				system("cls");
+				if (stoi(age) >= stoi(experience)) {
+					str = recv(connection);
+					if (str == "Y")cout << "КАПИТАН УСПЕШНО ЗАРЕГИСТРИРОВАН" << endl;
+					else if (str == "N")cout << "ДАННЫЙ КАПИТАН УЖЕ СУЩЕСТВУЕТ" << endl;
+				}
+				else cout << "СТАЖ ДОЛЖЕН НЕ ПРЕВЫШАТЬ ВОЗРАСТ" << endl;
+			}
+			else cout << "ВОЗРАСТ ДОЛЖЕН БЫТЬ БОЛЬШЕ 0" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 2: {
+			system("cls");
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				cout << "0.ВЫХОД" << endl << "ВВЕДИТЕ НОМЕР КАПИТАНА" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (0 > stoi(str) || stoi(str) > size) {
+					system("cls");
+					cout << "ДАННОГО КАПИТАНА НЕТ" << endl;
+					Sleep(1000);
+				}
+				else if (stoi(str)) {
+					int x = 1;
+					while (x) {
+						system("cls");
+						string name = recv(connection);
+						string surname = recv(connection);
+						int age = stoi(recv(connection));
+						int experience = stoi(recv(connection));
+						cout << "1.ИЗМЕНИТЬ  ИМЯ : " << name << endl << "2.ИЗМЕНИТЬ ФАМИЛИЮ : " << surname << endl << "3.ИЗМЕНИТЬ ВОЗРАСТ : " << age << endl << "4.ИЗМЕНИТЬ СТАЖ : " << experience << endl << "0.ВЫХОД" << endl;
+						cin >> x;
+						cin.get();
+						send(connection, to_string(x));
+						switch (x) {
+						case 1: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВОЕ ИМЯ" << endl;
+							getline(cin, str);
+							send(connection, str);
+							str = recv(connection);
+							system("cls");
+							if (str == "Y") cout << "ИМЯ УСПЕШНО ИЗМЕНЕНО" << endl;
+							else if (str == "N") cout << "ДАННЫЙ КАПИТАН УЖЕ СУЩЕСТВУЕТ" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 2: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВУЮ ФАМИЛИЮ" << endl;
+							getline(cin, str);
+							send(connection, str);
+							str = recv(connection);
+							system("cls");
+							if (str == "Y") cout << "ФАМИЛИЯ УСПЕШНО ИЗМЕНЕНА" << endl;
+							else if (str == "N") cout << "ДАННЫЙ КАПИТАН УЖЕ СУЩЕСТВУЕТ" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 3: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВЫЙ ВОЗРАСТ" << endl;
+							getline(cin, str);
+							system("cls");
+							send(connection, str);
+							if (stoi(str) >= experience && stoi(str) > 0) {
+								str = recv(connection);
+								if (str == "Y") cout << "ВОЗРАСТ УСПЕШНО ИЗМЕНЁН" << endl;
+								else if (str == "N") cout << "ДАННЫЙ КАПИТАН УЖЕ СУЩЕСТВУЕТ" << endl;
+							}
+							else cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 4: {
+							system("cls");
+							cout << "ВВЕДИТЕ НОВЫЙ СТАЖ" << endl;
+							getline(cin, str);
+							system("cls");
+							send(connection, str);
+							if (age >= stoi(str) && stoi(str) >= 0) {
+								str = recv(connection);
+								if (str == "Y") cout << "СТАЖ УСПЕШНО ИЗМЕНЁН" << endl;
+								else if (str == "N") cout << "ДАННЫЙ КАПИТАН УЖЕ СУЩЕСТВУЕТ" << endl;
+							}
+							else cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+							Sleep(1000);
+							break;
+						}
+						case 0: break;
+						default: {
+							cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+							Sleep(1000);
+							break;
+						}
+						}
+					}
+				}
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 3: {
+			system("cls");
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				cout << "0.ВЫХОД" << endl << "ВВЕДИТЕ НОМЕР КАПИТАНА" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (0 > stoi(str) || stoi(str) > size) {
+					system("cls");
+					cout << "ДАННОГО КАПИТАНА НЕТ" << endl;
+					Sleep(1000);
+				}
+				else if (stoi(str)) {
+					system("cls");
+					cout << "КАПИТАН УСПЕШНО УДАЛЁН	" << endl;
+					Sleep(1000);
+				}
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 4: {
+			int x = 1;
+			while(x) {
+				system("cls");
+				cout << "1.ПО ИМЕНИ ИЛИ ФАМИЛИИ" << endl << "2.ПО ВОЗРАСТУ ИЛИ СТАЖУ" << endl << "0.ВЫХОД" << endl;
+				cin >> x;
+				cin.get();
+				send(connection, to_string(x));
+				switch (x) {
+				case 1: {
+					system("cls");
+					cout << "ВВЕДИТЕ ИМЯ ИЛИ ФАМИЛИЮ" << endl;
+					getline(cin, str);
+					send(connection, str);
+					str = recv(connection);
+					if (str == "Y") {
+						str = recv(connection);
+						system("cls");
+						cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						for (unsigned int x = 1; x <= stoi(str); x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						system("pause");
+					}
+					else if (str == "N") {
+						system("cls");
+						cout << "КАПИТАНОВ НЕ НАЙДЕНО" << endl;
+						Sleep(1000);
+					}
+					break;
+				}
+				case 2: {
+					system("cls");
+					cout << "ВВЕДИТЕ ВОЗРАСТ ИЛИ СТАЖ" << endl;
+					getline(cin, str);
+					send(connection, str);
+					str = recv(connection);
+					if (str == "Y") {
+						str = recv(connection);
+						system("cls");
+						cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						for (unsigned int x = 1; x <= stoi(str); x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						system("pause");
+					}
+					else if (str == "N") {
+						system("cls");
+						cout << "КАПИТАНОВ НЕ НАЙДЕНО" << endl;
+						Sleep(1000);
+					}
+					break;
+				}
+				case 0: break;
+				default: {
+					cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+					Sleep(1000);
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 5: {
+			int x = 1;
+			while (x) {
+				system("cls");
+				cout << "1.ПО ФАМИЛИИ И ИМЕНИ" << endl << "2.ПО СТАЖУ И ВОЗРАСТУ" << endl << "0.ВЫХОД" << endl;
+				cin >> x;
+				cin.get();
+				send(connection, to_string(x));
+				switch (x) {
+				case 1: {
+					system("cls");
+					cout << "КАПИТАНЫ ОТСОРТИРОВАНЫ ПО ФАМИЛИИ И ИМЕНИ" << endl;
+					Sleep(1000);
+					break;
+				}
+				case 2: {
+					system("cls");
+					cout << "КАПИТАНЫ ОТСОРТИРОВАНЫ ПО СТАЖУ И ВОЗРАСТУ" << endl;
+					Sleep(1000);
+					break;
+				}
+				case 0: break;
+				default: {
+					cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+					Sleep(1000);
+					break;
+				}
+				}
+			}
+			break;
+		}
+		case 6: {
+			str = recv(connection);
+			if (stoi(str)) {
+				system("cls");
+				cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				for (unsigned int x = 1; x <= stoi(str); x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				system("pause");
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 7: {
+			str = recv(connection);
+			system("cls");
+			if (str == "Y")cout << "ОТЧЁТ ПО КАПИТАНАМ УСПЕШНО СФОРМИРОВАН" << endl;
+			else if (str == "N")cout << "ОТЧЁТ ПО КАПИТАНАМ НЕ СФОРМИРОВАН" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 0: break;
+		default: {
+			cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+			Sleep(1000);
+			break;
+		}
+		}
+	}
+}
+
+void main_menu_A(SOCKET connection) {
+	int x = 1;
+	string str;
+	while (x) {
+		system("cls");
+		cout << "\tМЕНЮ АДМИНИСТРАТОРА" << endl << "1.ИЗМЕНИТЬ  ЛОГИН : " << recv(connection) << endl << "2.ИЗМЕНИТЬ ПАРОЛЬ : " << recv(connection) << endl <<  "3.УДАЛИТЬ ПРОФИЛЬ" << endl << "4.МЕНЮ ПЕРСОН" << endl << "5.МЕНЮ КАПИТАНОВ" << endl << "6.МЕТОД ПРЕДПОЧТЕНИЙ" << endl << "0.ВЫХОД" << endl;
+		cin >> x;
+		cin.get();
+		send(connection, to_string(x));
+		switch (x) {
+		case 1: {
+			system("cls");
+			cout << "ВВЕДИТЕ НОВЫЙ ЛОГИН" << endl;
+			getline(cin, str);
+			send(connection, str);
+			str = recv(connection);
+			system("cls");
+			if (str == "Y") cout << "ЛОГИН УСПЕШНО ИЗМЕНЁН" << endl;
+			else if (str == "N") cout << "ДАННЫЙ ЛОГИН УЖЕ ЗАНЯТ" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 2: {
+			system("cls");
+			cout << "ВВЕДИТЕ НОВЫЙ ПАРОЛЬ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			system("cls");
+			cout << "ПАРОЛЬ УСПЕШНО ИЗМЕНЁН" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 3: {
+			x = 0;
+			break;
+		}
+		case 4: {
+			persons_menu(connection);
+			break;
+		}
+		case 5: {
+			captains_menu(connection);
+			break;
+		}
+		case 6: {
+			system("cls");
+			int size = stoi(recv(connection));
+			string value;
+			if (size) {
+				cout << "ВВЕДИТЕ КОЛИЧЕСТВО ЭКСПЕРТОВ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (stoi(str)) {
+					for (unsigned int x = 0; x < size; x++) for (unsigned int y = 0; y < stoi(str); y++) {
+						system("cls");
+						cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl << "| " << setw(3) << x + 1 << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						cout << "ЭКСПЕРТ " << y + 1 << ", ВАШЕ МНЕНИЕ (1-" << size << ")" << endl;
+						getline(cin, value);
+						send(connection, value);
+					}
+					system("cls");
+					cout << "|-----|------------|------------|-------|-------|-----------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |     %     |" << endl << "|-----|------------|------------|-------|-------|-----------|" << endl;
+					for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(9) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|-----------|" << endl;
+					system("pause");
+				}
+				else {
+					system("cls");
+					cout << "ЗАВЕРШЕНИЕ" << endl;
+					Sleep(1000);
+				}
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 0: break;
+		default: {
+			cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+			Sleep(1000);
+			break;
+		}
+		}
+	}
+}
+
+void main_menu_U(SOCKET connection) {
+	int x = 1;
+	string str;
+	while (x) {
+		system("cls");
+		cout << "\tМЕНЮ ПОЛЬЗОВАТЕЛЯ" << endl << "1.ИЗМЕНИТЬ  ЛОГИН : " << recv(connection) << endl << "2.ИЗМЕНИТЬ ПАРОЛЬ : " << recv(connection) << endl << "3.УДАЛИТЬ ПРОФИЛЬ" << endl << "4.ИЗМЕНИТЬ КАПИТАНА : " << endl << "ИМЯ     : " << recv(connection) << endl << "ФАМИЛИЯ : " << recv(connection) << endl << "ВОЗРАСТ : " << stoi(recv(connection)) << endl << "СТАЖ    : " << stoi(recv(connection)) << endl << "5.МЕТОД ПРЕДПОЧТЕНИЙ" << endl << "0.ВЫХОД" << endl;
+		cin >> x;
+		cin.get();
+		send(connection, to_string(x));
+		switch (x) {
+		case 1: {
+			system("cls");
+			cout << "ВВЕДИТЕ НОВЫЙ ЛОГИН" << endl;
+			getline(cin, str);
+			send(connection, str);
+			str = recv(connection);
+			system("cls");
+			if (str == "Y") cout << "ЛОГИН УСПЕШНО ИЗМЕНЁН" << endl;
+			else if (str == "N") cout << "ДАННЫЙ ЛОГИН УЖЕ ЗАНЯТ" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 2: {
+			system("cls");
+			cout << "ВВЕДИТЕ НОВЫЙ ПАРОЛЬ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			system("cls");
+			cout << "ПАРОЛЬ УСПЕШНО ИЗМЕНЁН" << endl;
+			Sleep(1000);
+			break;
+		}
+		case 3: {
+			x = 0;
+			break;
+		}
+		case 4: {
+			system("cls");
+			int size = stoi(recv(connection));
+			if (size) {
+				system("cls");
+				cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+				cout << "0.ВЫХОД" << endl << "ВВЕДИТЕ НОМЕР КАПИТАНА" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (0 > stoi(str) || stoi(str) > size) {
+					system("cls");
+					cout << "ДАННОГО КАПИТАНА НЕТ" << endl;
+					Sleep(1000);
+				}
+				else if (stoi(str)) {
+					system("cls");
+					cout << "КАПИТАН УСПЕШНО ИЗМЕНЁН" << endl;
+					Sleep(1000);
+				}
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 5: {
+			system("cls");
+			int size = stoi(recv(connection));
+			string value;
+			if (size) {
+				cout << "ВВЕДИТЕ КОЛИЧЕСТВО ЭКСПЕРТОВ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				if (stoi(str)) {
+					for (unsigned int x = 0; x < size; x++ ) for (unsigned int y = 0; y < stoi(str); y++) {
+						system("cls");
+						cout << "|-----|------------|------------|-------|-------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |" << endl << "|-----|------------|------------|-------|-------|" << endl << "| " << setw(3) << x+1 << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|" << endl;
+						cout << "ЭКСПЕРТ " << y+1 << ", ВАШЕ МНЕНИЕ (1-" << size << ")" << endl;
+						getline(cin, value);
+						send(connection, value);
+					}
+					system("cls");
+					cout << "|-----|------------|------------|-------|-------|-----------|" << endl << "|  №  |     ИМЯ    |   ФАМИЛИЯ  |  ЛЕТ  |  СТАЖ |     %     |" << endl << "|-----|------------|------------|-------|-------|-----------|" << endl;
+					for (unsigned int x = 1; x <= size; x++) cout << "| " << setw(3) << x << " | " << setw(10) << recv(connection) << " | " << setw(10) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(5) << recv(connection) << " | " << setw(9) << recv(connection) << " |" << endl << "|-----|------------|------------|-------|-------|-----------|" << endl;
+					system("pause");
+				}
+				else {
+					system("cls");
+					cout << "ЗАВЕРШЕНИЕ" << endl;
+					Sleep(1000);
+				}
+			}
+			else {
+				system("cls");
+				cout << "КАПИТАНОВ НЕТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 0: break;
+		default: {
+			cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+			Sleep(1000);
+			break;
+		}
+		}
+	}
+}
+
+void enter_menu(SOCKET connection) {
+	int x = 1;
+	string str;
+	while (x) {
+		system("cls");
+		cout << "\tМЕНЮ ВХОДА" << endl << "1.ВХОД" << endl << "2.РЕГИСТРАЦИЯ" << endl << "0.ВЫХОД" << endl;
+		cin >> x;
+		cin.get();
+		send(connection, to_string(x));
+		switch (x) {
+		case 1: {
+			system("cls");
+			cout << "ВВЕДИТЕ ЛОГИН" << endl;
+			getline(cin, str);
+			send(connection, str);
+			system("cls");
+			cout << "ВВЕДИТЕ ПАРОЛЬ" << endl;
+			getline(cin, str);
+			send(connection, str);
+			str = recv(connection);
+			if (str == "A") {
+				system("cls");
+				cout << "АВТОРИЗАЦИЯ АДМИНИСТРАТОРА ПРОШАЛА УСПЕШНО" << endl;
+				Sleep(1000);
+				main_menu_A(connection);
+			}
+			else if (str == "U") {
+				system("cls");
+				cout << "АВТОРИЗАЦИЯ ПОЛЬЗОВАТЕЛЯ ПРОШАЛА УСПЕШНО" << endl;
+				Sleep(1000);
+				main_menu_U(connection);
+			}
+			else if (str == "N") {
+				system("cls");
+				cout << "НЕВЕРНЫЙ ЛОГИН ИЛИ ПАРОЛЬ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 2: {
+			system("cls");
+			cout << "ВВЕДИТЕ ЛОГИН" << endl;
+			getline(cin, str);
+			send(connection, str);
+			str = recv(connection);
+			if (str == "Y") {
+				system("cls");
+				cout << "ВВЕДИТЕ ПАРОЛЬ" << endl;
+				getline(cin, str);
+				send(connection, str);
+				system("cls");
+				cout << "ВВЕДИТЕ ТИП" << endl;
+				getline(cin, str);
+				send(connection, str);
+				str = recv(connection);
+				if (str == "A") {
+					system("cls");
+					cout << "РЕГИСТРАЦИЯ АДМИНИСТРАТОРА ПРОШАЛА УСПЕШНО" << endl;
+					Sleep(1000);
+					main_menu_A(connection);
+				}
+				else if (str == "U") {
+					system("cls");
+					cout << "РЕГИСТРАЦИЯ ПОЛЬЗОВАТЕЛЯ ПРОШАЛА УСПЕШНО" << endl;
+					Sleep(1000);
+					main_menu_U(connection);
+				}
+				else if (str == "N") {
+					system("cls");
+					cout << "ВЫБРАННЫЙ ТИП НЕ РАСПОЗНАН" << endl;
+					Sleep(1000);
+				}
+			}
+			else if (str == "N") {
+				system("cls");
+				cout << "ДАННЫЙ ЛОГИН УЖЕ ЗАНЯТ" << endl;
+				Sleep(1000);
+			}
+			break;
+		}
+		case 0: break;
+		default: {
+			cout << "НЕКОРРЕКТНЫЙ ВВОД" << endl;
+			Sleep(1000);
+			break;
+		}
+		}
+	}
+}
+
+int main() {
+	system("COLOR B");
+	SetConsoleCP(1251);
+	SetConsoleOutputCP(1251);
+	WSAData wsaData;
+	WORD DLLVersion = MAKEWORD(2, 1);
+	if (WSAStartup(DLLVersion, &wsaData)) exit(1);
+	SOCKADDR_IN addr;
+	int sizeofaddr = sizeof(addr);
+	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addr.sin_port = htons(1111);
+	addr.sin_family = AF_INET;
+	SOCKET connection = socket(AF_INET, SOCK_STREAM, NULL);
+	if (connect(connection, (SOCKADDR*)&addr, sizeof(addr))) exit(2);
+	enter_menu(connection);
+	closesocket(connection);
+	return 0;
+}
